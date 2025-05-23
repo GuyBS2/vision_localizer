@@ -1,0 +1,21 @@
+# Ignore Python virtual environments
+.venv/
+
+# Ignore raw datasets and extracted images
+data/
+*.zip
+
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*.so
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# VSCode settings
+.vscode/
