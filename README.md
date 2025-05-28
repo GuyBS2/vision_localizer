@@ -16,15 +16,22 @@ The current version uses synthetic (x, y) positions. Future extensions will incl
 
 ```
 vision_localizer/
-├── src/                         # Core logic: feature extractor, localizer
-│   └── feature_extractor.py
+├── src/                         # Core logic: feature extractor, localizer, matcher
+│   ├── feature_extractor.py
+│   └── matcher.py
 ├── scripts/                     # Dataset processing and utilities
 │   ├── download_dataset.sh
+│   ├── extract_features_batch.py
+│   ├── query_image_match.py
 │   ├── split_images_to_grid.py
-│   └── extract_features_batch.py (coming soon)
+│   ├── augment_query.py
+│   └── visualize_feature_extraction.py
 ├── data/                        # Raw dataset + image patches (ignored in Git)
 │   ├── raw_mass_data/
-│   └── map_images/
+│   ├── map_images/
+│   ├── map_features.npy
+│   ├── map_filenames.csv
+│   └── test_inputs/
 ├── requirements.txt             # Python dependencies
 ├── setup_workspace.sh           # Complete workspace setup (one command setup)
 ├── README.md
@@ -51,18 +58,24 @@ cd vision_localizer
 > - Installs dependencies
 > - Downloads the Massachusetts Buildings dataset from Kaggle
 > - Generates 150×150 image patches from the raw satellite images
+> - Extracts feature vectors for all patches
 
 ## Output Files (after setup)
 
 - `data/map_images/`        – all 150x150 tiles
 - `data/map_features.npy`   – feature vectors
-- `data/map_filenames.csv`  – file name
+- `data/map_filenames.csv`  – filenames associated with each vector
+- `data/test_inputs/`       – query images to match against the map
 
 ## Dependencies
 
-Tested on Python 3.12+. Install using:
+Tested on Python 3.12+.  
+Install Python dependencies using:
 
-This project is licensed under the MIT License.
+
+## License
+
+This project is licensed under the MIT License. See `LICENSE` for details.
 
 ## Credits
 
