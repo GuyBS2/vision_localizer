@@ -4,24 +4,26 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 import argparse
 import random
-import os
 from PIL import Image, ImageEnhance, ImageFilter
 
 # ------------------------------
 # Augmentation Functions
 # ------------------------------
 
-def apply_blur(img):
+def apply_blur(img: Image.Image) -> Image.Image:
+    """Apply Gaussian blur with random radius."""
     radius = random.uniform(1.0, 2.5)
     return img.filter(ImageFilter.GaussianBlur(radius))
 
 
-def apply_rotate(img):
+def apply_rotate(img: Image.Image) -> Image.Image:
+    """Rotate the image by a random angle."""
     angle = random.uniform(-15, 15)
     return img.rotate(angle, resample=Image.BILINEAR, expand=True)
 
 
-def apply_crop(img):
+def apply_crop(img: Image.Image) -> Image.Image:
+    """Randomly crop and resize the image back to original size."""
     width, height = img.size
     crop_ratio = random.uniform(0.85, 0.95)
     new_w = int(width * crop_ratio)
@@ -32,7 +34,8 @@ def apply_crop(img):
     return cropped.resize((width, height))
 
 
-def apply_shift(img):
+def apply_shift(img: Image.Image) -> Image.Image:
+    """Apply random affine shift to the image."""
     width, height = img.size
     max_dx = int(width * 0.1)
     max_dy = int(height * 0.1)
@@ -41,9 +44,10 @@ def apply_shift(img):
     return img.transform(img.size, Image.AFFINE, (1, 0, dx, 0, 1, dy))
 
 
-def apply_brightness(img):
-    enhancer = ImageEnhance.Brightness(img)
+def apply_brightness(img: Image.Image) -> Image.Image:
+    """Adjust brightness randomly."""
     factor = random.uniform(0.7, 1.3)
+    enhancer = ImageEnhance.Brightness(img)
     return enhancer.enhance(factor)
 
 
@@ -56,14 +60,16 @@ AUGMENTATIONS = [
     apply_rotate,
     apply_crop,
     apply_shift,
-    apply_brightness
+    apply_brightness,
 ]
 
-
-def apply_random_augmentations(img):
+def apply_random_augmentations(img: Image.Image) -> tuple[Image.Image, list[str]]:
     """
-    Apply a random subset of augmentations to the image.
-    Returns the augmented image and a list of operations applied.
+    Apply a random subset of augmentations.
+
+    Returns:
+        - Augmented image
+        - List of applied augmentation function names
     """
     augmented = img.copy()
     selected = random.sample(AUGMENTATIONS, k=random.randint(1, len(AUGMENTATIONS)))
@@ -73,7 +79,7 @@ def apply_random_augmentations(img):
 
 
 # ------------------------------
-# Main CLI
+# CLI Entry Point
 # ------------------------------
 
 def main():
@@ -98,7 +104,7 @@ def main():
         out_name = f"{base_name}_aug{i}.jpg"
         out_path = output_dir / out_name
         aug_img.save(out_path)
-        print(f"✔ Saved {out_name}  |  augmentations: {', '.join(ops)}")
+        print(f"Saved: {out_name}  |  Augmentations: {', '.join(ops)}")
 
 
 if __name__ == "__main__":

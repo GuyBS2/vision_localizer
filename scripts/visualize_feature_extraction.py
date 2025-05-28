@@ -6,58 +6,93 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-from pathlib import Path
+
 from src.feature_extractor import FeatureExtractor
 
-# === Config ===
+# ------------------------------
+# Configuration
+# ------------------------------
 
-# path to a patch image folder
-IMAGE_PATH = Path("data/map_images")
-# pick first one
-sample_image = sorted(IMAGE_PATH.glob("*.jpg"))[0]
+IMAGE_DIR = Path("data/map_images")
+SAMPLE_IMAGE = sorted(IMAGE_DIR.glob("*.jpg"))[0]  # Pick the first available tile
 
-# === Load image ===
-img = Image.open(sample_image).convert("RGB")
 
-# === Initialize model ===
-model = FeatureExtractor()
+# ------------------------------
+# Visualization Utilities
+# ------------------------------
 
-# === Preprocess image ===
-tensor = model.preprocess_image(img)  # [1, 3, 224, 224]
+def unnormalize_tensor(tensor: torch.Tensor) -> np.ndarray:
+    """
+    Undo ImageNet normalization and convert tensor to NumPy for display.
 
-# === Extract feature vector ===
-feature = model(tensor).numpy()  # [1280]
+    Args:
+        tensor: Torch tensor of shape [3, 224, 224]
 
-# === Plot original image ===
-plt.figure(figsize=(12, 4))
-plt.subplot(1, 3, 1)
-plt.imshow(img)
-plt.title("Original Tile (150x150)")
-plt.axis("off")
+    Returns:
+        Image as NumPy array in shape [224, 224, 3]
+    """
+    mean = np.array([0.485, 0.456, 0.406])
+    std = np.array([0.229, 0.224, 0.225])
+    image = tensor.permute(1, 2, 0).cpu().numpy()
+    image = std * image + mean
+    return np.clip(image, 0, 1)
 
-# === Plot resized image ===
-resized_tensor = tensor.squeeze().permute(1, 2, 0).cpu().numpy()  # [224, 224, 3]
 
-# Undo normalization for display
-mean = np.array([0.485, 0.456, 0.406])
-std  = np.array([0.229, 0.224, 0.225])
-resized_img = std * resized_tensor + mean
-resized_img = np.clip(resized_img, 0, 1)
+def plot_feature_extraction(original_img: Image.Image, resized_img: np.ndarray, feature_vec: np.ndarray):
+    """
+    Display original tile, resized input, and extracted feature vector.
 
-plt.subplot(1, 3, 2)
-plt.imshow(resized_img)
-plt.title("Resized & Normalized (224x224)")
-plt.axis("off")
+    Args:
+        original_img: Raw input tile
+        resized_img: Preprocessed image (after resizing and normalization)
+        feature_vec: Extracted feature vector (1D)
+    """
+    plt.figure(figsize=(12, 4))
 
-# === Plot feature vector ===
-plt.subplot(1, 3, 3)
-plt.plot(feature)
-plt.title("Feature Vector (1280-dim)")
-plt.xlabel("Dimension")
-plt.tight_layout()
-plt.show()
+    plt.subplot(1, 3, 1)
+    plt.imshow(original_img)
+    plt.title("Original Tile (150×150)")
+    plt.axis("off")
 
-# === Print summary ===
-print("Sample image:", sample_image.name)
-print("Feature shape:", feature.shape)
-print("Feature vector (first 10 dims):", feature[:10])
+    plt.subplot(1, 3, 2)
+    plt.imshow(resized_img)
+    plt.title("Resized & Normalized (224×224)")
+    plt.axis("off")
+
+    plt.subplot(1, 3, 3)
+    plt.plot(feature_vec)
+    plt.title("Feature Vector (1280-Dim)")
+    plt.xlabel("Dimension")
+    plt.tight_layout()
+    plt.show()
+
+
+# ------------------------------
+# Main
+# ------------------------------
+
+def main():
+    # Load image
+    img = Image.open(SAMPLE_IMAGE).convert("RGB")
+
+    # Initialize model
+    model = FeatureExtractor()
+
+    # Preprocess
+    tensor = model.preprocess_image(img)  # [1, 3, 224, 224]
+
+    # Extract features
+    feature = model(tensor).numpy()  # [1280]
+    resized = unnormalize_tensor(tensor.squeeze())
+
+    # Plot
+    plot_feature_extraction(img, resized, feature)
+
+    # Log
+    print(f"Sample image: {SAMPLE_IMAGE.name}")
+    print(f"Feature shape: {feature.shape}")
+    print(f"Feature vector (first 10 dims): {np.round(feature[:10], 3)}")
+
+
+if __name__ == "__main__":
+    main()
